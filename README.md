@@ -50,7 +50,7 @@ Special thanks to **[SDK] Shimul Dey Katha** for continuous technical mentorship
 
 ## 📖 Overview
 
-The **Southeast Cultural Society (SCS)** portal serves as a unified digital platform for managing the society’s cultural events, executive committee, recruitment, photo gallery, and member articles.
+The **Official Website of Southeast Cultural Society** serves as a unified digital platform for managing the society’s cultural events, executive committee, recruitment, photo gallery, and member articles.
 
 Built with a **serverless backend architecture**, the project utilizes **Google Apps Script** as a middleware REST API and **Google Sheets** as a relational database engine. This allows real-time dynamic data rendering on a responsive HTML5/CSS3 frontend without requiring traditional server infrastructure or database hosting fees.
 
