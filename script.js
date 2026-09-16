@@ -1,4 +1,4 @@
-const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbwRYSUTJ5vbhGIUWzEotNqTBtUmdD9YQKFZ2KHdN06Cs_9jG7KJx-ep2DOkyZ4VF_MBJA/exec';
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbxXxdPt-IC4oy2jOU8bwObHmMqV8VppSI-Z8y0ajcNNcnp3Huv9D1QaGbRTVelN7jcEug/exec';
 
 function adminGet(params) {
   const query = new URLSearchParams(params).toString();
@@ -154,13 +154,22 @@ loadNotices();
 const listDiv = document.getElementById('recruitment-list');
 const closeRecruitBtn = document.querySelector('.close-recruitment-btn');
 const loadAllApprovedBtn = document.getElementById('loadAllApprovedBtn');
+const recruitmentHeader = document.getElementById('recruitmentHeader');
 
 loadAllApprovedBtn.addEventListener('click', () => loadApprovedMembers());
 
 function loadApprovedMembers(){
   const oldRows = listDiv.querySelectorAll('.recruitment-item, .recruitment-list-msg');
   oldRows.forEach(r => r.remove());
-  
+
+  const isAdmin = getAdminToken() && getAuthRole() === 'admin';
+  recruitmentHeader.innerHTML = `
+    <div>Name</div>
+    <div>Student ID</div>
+    <div>Department</div>
+    ${isAdmin ? '<div>Actions</div>' : ''}
+  `;
+
   const loadingRow = document.createElement('p');
   loadingRow.style.textAlign = 'center';
   loadingRow.style.color = 'maroon';
@@ -174,7 +183,43 @@ function loadApprovedMembers(){
       res.data.forEach(stu => {
         const div = document.createElement('div');
         div.className = 'recruitment-item';
-        div.innerHTML = `<div>${stu.Name}</div><div>${stu.StudentID}</div><div>${stu.Department}</div>`;
+
+        if (isAdmin) {
+          div.innerHTML = `
+            <div>${stu.Name}</div>
+            <div>${stu.StudentID}</div>
+            <div>${stu.Department}</div>
+            <div class="admin-list-actions">
+              <button class="admin-btn pending">Pending</button>
+              <button class="admin-btn reject">Delete</button>
+            </div>
+          `;
+
+          div.querySelector('.pending').addEventListener('click', () => {
+            adminPost({ action: 'pendingMembership', token: getAdminToken(), id: stu.ID }).then(r => {
+              if (r.success) {
+                loadApprovedMembers();
+              } else {
+                alert(r.error || 'Failed to update status.');
+              }
+            });
+          });
+
+          div.querySelector('.reject').addEventListener('click', () => {
+            if (confirm(`Are you sure you want to delete member ${stu.Name}?`)) {
+              adminPost({ action: 'deleteMembership', token: getAdminToken(), id: stu.ID }).then(r => {
+                if (r.success) {
+                  loadApprovedMembers();
+                } else {
+                  alert(r.error || 'Failed to delete member.');
+                }
+              });
+            }
+          });
+        } else {
+          div.innerHTML = `<div>${stu.Name}</div><div>${stu.StudentID}</div><div>${stu.Department}</div>`;
+        }
+
         listDiv.appendChild(div);
       });
       closeRecruitBtn.style.display = 'inline-block';
