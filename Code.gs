@@ -116,9 +116,17 @@ function doPost(e) {
         requireAuth(body.token, 'admin');
         result = setMembershipStatus(body.id, 'Approved');
         break;
+      case 'pendingMembership':
+        requireAuth(body.token, 'admin');
+        result = setMembershipStatus(body.id, 'Pending');
+        break;
       case 'rejectMembership':
         requireAuth(body.token, 'admin');
         result = setMembershipStatus(body.id, 'Rejected');
+        break;
+      case 'deleteMembership':
+        requireAuth(body.token, 'admin');
+        result = removeRowById(SHEET_NAMES.MEMBERSHIP, body.id);
         break;
 
       case 'addCommittee':
@@ -279,6 +287,7 @@ function getApprovedMembers(deptFilter) {
     if (rec.Status === 'Approved') {
       if (!deptFilter || rec.Department.toLowerCase() === deptFilter.toLowerCase()) {
         out.push({
+          ID: rec.ID,
           Name: rec.Name,
           StudentID: rec.StudentID,
           Department: rec.Department,
