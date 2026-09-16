@@ -82,6 +82,10 @@ function doGet(e) {
         requireAuth(e.parameter.token, 'admin');
         result = getArticles(false, 'Pending');
         break;
+      case 'getAllArticlesAdmin':
+        requireAuth(e.parameter.token, 'admin');
+        result = getArticles(false, null);
+        break;
       case 'getMyArticles':
         result = getMyArticles(e.parameter.token);
         break;
@@ -159,6 +163,12 @@ function doPost(e) {
         requireAuth(body.token, 'admin');
         result = setArticleStatus(body.id, 'Rejected');
         break;
+      case 'deleteArticle':
+        result = deleteArticle(body.token, body.id);
+        break;
+      case 'updateArticle':
+        result = updateArticle(body.token, body.id, body.title, body.content);
+        break;
 
       default:
         return jsonResponse({ success: false, error: 'Unknown or missing action' });
@@ -170,10 +180,6 @@ function doPost(e) {
 }
 
 // AUTH
-// Single login form for BOTH admin and members.
-// Admin: checked against the Admin sheet (username/password).
-// Member: checked against the Membership sheet using StudentID as the
-// username — only rows with Status "Approved" are allowed to log in.
 function login(username, password) {
   const adminSheet = sheetByName(SHEET_NAMES.ADMIN);
   const adminRows = adminSheet.getDataRange().getValues();
@@ -214,8 +220,6 @@ function issueToken(identity) {
   return { token: token, role: identity.role, name: identity.name, digitalId: identity.digitalId || null };
 }
 
-// Pass a requiredRole ('admin') to restrict a route to admins only.
-// Omit it to allow any logged-in identity (admin OR member).
 function requireAuth(token, requiredRole) {
   if (!token) throw new Error('Not authenticated');
   const raw = CacheService.getScriptCache().get('token_' + token);
@@ -371,8 +375,6 @@ function addGalleryImage(body) {
 }
 
 // ARTICLES
-// Only a logged-in identity (approved member or admin) may submit — the
-// author name/email come from the verified session, never from the client.
 function submitArticle(body) {
   const identity = requireAuth(body.token);
   const sheet = sheetByName(SHEET_NAMES.ARTICLES);
@@ -415,6 +417,50 @@ function setArticleStatus(id, status) {
     if (rows[i][0] === id) {
       sheet.getRange(i + 1, 7).setValue(status);
       return { status: status };
+    }
+  }
+  throw new Error('Article not found');
+}
+
+function deleteArticle(token, id) {
+  const identity = requireAuth(token);
+  const sheet = sheetByName(SHEET_NAMES.ARTICLES);
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === id) {
+      const rec = rowToObject(headers, rows[i]);
+      if (identity.role === 'admin' || (identity.role === 'member' && identity.email && identity.email === rec.AuthorEmail)) {
+        sheet.deleteRow(i + 1);
+        return { deleted: true };
+      } else {
+        throw new Error('Not authorized to delete this article');
+      }
+    }
+  }
+  throw new Error('Article not found');
+}
+
+function updateArticle(token, id, title, content) {
+  const identity = requireAuth(token);
+  const sheet = sheetByName(SHEET_NAMES.ARTICLES);
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === id) {
+      const rec = rowToObject(headers, rows[i]);
+      if (identity.role === 'admin' || (identity.role === 'member' && identity.email && identity.email === rec.AuthorEmail)) {
+        sheet.getRange(i + 1, 2).setValue(title);
+        sheet.getRange(i + 1, 3).setValue(content);
+        if (identity.role === 'member') {
+          sheet.getRange(i + 1, 7).setValue('Pending');
+        }
+        return { updated: true };
+      } else {
+        throw new Error('Not authorized to update this article');
+      }
     }
   }
   throw new Error('Article not found');
