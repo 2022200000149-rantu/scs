@@ -8,7 +8,7 @@
 [![Status](https://img.shields.io/badge/Status-Live-success?style=for-the-badge&logo=render)](https://2022200000149-rantu.github.io/scs/)
 [![Hosting](https://img.shields.io/badge/Hosting-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://2022200000149-rantu.github.io/scs/)
 [![Backend](https://img.shields.io/badge/Backend-Google%20Apps%20Script-4285F4?style=for-the-badge&logo=google)](https://developers.google.com/apps-script)
-[![Database](https://img.shields.io/badge/Database-Google%20Sheets-34A853?style=for-the-badge&logo=googlesheets)]([(https://docs.google.com/spreadsheets/d/1DJFhbm2DvqMcWHPUOvQA4hsOksehKxtjrAUEH71yf24/edit?usp=sharing)](https://docs.google.com/spreadsheets/d/1DJFhbm2DvqMcWHPUOvQA4hsOksehKxtjrAUEH71yf24/edit?usp=sharing))
+[![Database](https://img.shields.io/badge/Database-Google%20Sheets-34A853?style=for-the-badge&logo=googlesheets)](https://docs.google.com/spreadsheets/d/1DJFhbm2DvqMcWHPUOvQA4hsOksehKxtjrAUEH71yf24/edit?usp=sharing)
 
 [🌐 **Visit Live Web Portal**](https://2022200000149-rantu.github.io/scs/) • [🐞 Report Issue](https://github.com/2022200000149-rantu/scs/issues) • [✨ Request Feature](https://github.com/2022200000149-rantu/scs/issues)
 
