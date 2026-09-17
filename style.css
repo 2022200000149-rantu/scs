@@ -759,6 +759,7 @@ section {
 .admin-btn.reject { background: #c0392b; }
 .admin-btn.remove { background: #8a5a2d; }
 .admin-btn.assign { background: var(--maroon); }
+.admin-btn.pending { background: var(--gold); color: var(--maroon-deep); }
 
 .empty-msg { color: var(--ink-soft); text-align: center; padding: 16px 0; font-size: 0.9rem; }
 
