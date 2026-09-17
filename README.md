@@ -10,7 +10,7 @@
 [![Backend](https://img.shields.io/badge/Backend-Google%20Apps%20Script-4285F4?style=for-the-badge&logo=google)](https://developers.google.com/apps-script)
 [![Database](https://img.shields.io/badge/Database-Google%20Sheets-34A853?style=for-the-badge&logo=googlesheets)](https://www.google.com/sheets/about/)
 
-[🌐 **Visit Live Web Portal**](https://2022200000149-rantu.github.io/SCS/) • [🐞 Report Issue](https://github.com/2022200000149-rantu/SCS/issues) • [✨ Request Feature](https://github.com/2022200000149-rantu/SCS/issues)
+[🌐 **Visit Live Web Portal**](https://2022200000149-rantu.github.io/scs/) • [🐞 Report Issue](https://github.com/2022200000149-rantu/scs/issues) • [✨ Request Feature](https://github.com/2022200000149-rantu/scs/issues)
 
 </div>
 
