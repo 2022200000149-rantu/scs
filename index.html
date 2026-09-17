@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Southeast Cultural Society</title>
+
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <canvas id="particle-bg"></canvas>
+
+  <header>
+    <div class="header-inner">
+      <a href="#home" class="brand">
+        <img src="assets/logo.png" alt="Southeast Cultural Society Logo" class="logo">
+        <span class="brand-text">
+          <strong>Southeast Cultural Society</strong>
+          <em>Since 2010</em>
+        </span>
+      </a>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#notice-board">Notices</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#committee-list">Committee</a>
+        <a href="#membership">Membership</a>
+        <a href="#recruitment-update">Members</a>
+        <a href="#articles">Articles</a>
+        <a href="#contact">Contact</a>
+        <a href="https://southeastculturalsociety.github.io/member/" target="_blank">Member ID</a>
+        <a href="#admin-area" id="adminNavLink" class="nav-login">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="news-wheel">
+    <div class="news-content" id="news-wheel">Notice Headline ~ Loading...</div>
+  </div>
+
+  <!-- ================= HERO ================= -->
+  <section id="home">
+    <div class="overlay">
+      <h2>Where Art, Culture &amp; Community Meet</h2>
+      <p>Promoting art, culture, and unity since 2010.</p>
+      <a href="#membership" class="join-btn">Join Us</a>
+    </div>
+  </section>
+
+  <!-- ================= ABOUT ================= -->
+  <section id="about">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>About Us</h2>
+        <p class="section-lede">Who we are and what we stand for</p>
+      </div>
+      <p>
+        The Southeast Cultural Society (SCS) was founded in 2010 to promote cultural awareness, creativity, and artistic expression among students. We organize cultural festivals, art exhibitions, workshops, and competitions that bring together talent from across the region. The IT Department plays a vital role in supporting these initiatives by managing our digital platforms, ensuring smooth online communication, and enhancing the technical aspects of our events. <br><br>
+        Our vision is to build a community that celebrates diversity and creativity through art and culture, supported by the IT Department's efforts in leveraging technology to connect, showcase, and enhance cultural experiences.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= NOTICE BOARD ================= -->
+  <section id="notice-board" class="section-alt">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Notice Board</h2>
+        <p class="section-lede">What's happening right now</p>
+      </div>
+      <div class="notice-section" id="upcoming-events">
+        <div class="notice-loading">
+          <div class="spinner"></div>
+          Loading...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GALLERY ================= -->
+  <section id="gallery">
+    <div class="section-head">
+      <h2>Gallery</h2>
+      <p class="section-lede">Moments from our festivals and events</p>
+    </div>
+    <div class="gallery-wrapper">
+      <div class="gallery-track top" id="gallery-track-top"></div>
+      <div class="gallery-track bottom" id="gallery-track-bottom"></div>
+    </div>
+    <a href="#" class="view-all-btn" id="openGallery">View Full Gallery</a>
+  </section>
+
+  <!-- ================= COMMITTEE ================= -->
+  <section id="committee-list" class="section-alt">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Meet the Committee</h2>
+        <p class="section-lede">The people behind the programs</p>
+      </div>
+      <div class="committee-grid" id="committeeGrid">
+        <div class="notice-loading"><div class="spinner"></div>Loading committee members...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MEMBERSHIP ================= -->
+  <section id="membership">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Membership</h2>
+        <p class="section-lede">Join the society, or check on your application</p>
+      </div>
+      <div class="membership-grid">
+        <div class="membership-card">
+          <h3>Submit a Membership Request</h3>
+          <form id="membershipForm" class="scs-form">
+            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="tel" name="phone" placeholder="Phone Number" required>
+            <input type="text" name="department" placeholder="Department" required>
+            <input type="text" name="studentId" placeholder="Student ID" required>
+            <input type="password" name="password" placeholder="Create a Password (for login after approval)" required minlength="4">
+            <button type="submit">Submit Request</button>
+          </form>
+          <p id="membershipFormMsg" class="form-msg"></p>
+        </div>
+
+        <div class="membership-card">
+          <h3>Check Your Membership Status</h3>
+          <form id="membershipCheckForm" class="scs-form">
+            <input type="text" name="studentId" placeholder="Enter Student ID">
+            <button type="submit">Check Status</button>
+          </form>
+          <div id="membershipCheckResult" class="form-msg"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APPROVED MEMBERS ================= -->
+  <section id="recruitment-update" class="section-alt">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Approved Members</h2>
+        <p class="section-lede">Officially recognized society members</p>
+      </div>
+      <div id="recruitment-buttons">
+        <button class="recruitment-btn" id="loadAllApprovedBtn">Show All Approved Members</button>
+      </div>
+      <div id="recruitment-list">
+        <div class="recruitment-header-container">
+          <div class="recruitment-header" id="recruitmentHeader">
+            <div>Name</div>
+            <div>Student ID</div>
+            <div>Department</div>
+          </div>
+        </div>
+      </div>
+      <button class="close-recruitment-btn">Close</button>
+    </div>
+  </section>
+
+  <!-- ================= ARTICLES ================= -->
+  <section id="articles">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Articles</h2>
+        <p class="section-lede">Writing from our members</p>
+      </div>
+      <div id="articlesList" class="articles-list">
+        <div class="notice-loading"><div class="spinner"></div>Loading articles...</div>
+      </div>
+
+      <div class="membership-card article-submit-card login-prompt-card" id="wantToWriteCard">
+        <h3>Want to Write for Us?</h3>
+        <p style="text-align:center;color:var(--ink-soft);font-size:0.9rem;">
+          Only approved members can submit articles. <a href="#admin-area">Log in</a> to write one —
+          not a member yet? <a href="#membership">Apply here</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section id="contact" class="section-alt">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Contact Us</h2>
+      </div>
+      <p>
+        Email: <a href="mailto:southeastculturalsociety@gmail.com">southeastculturalsociety@gmail.com</a> |
+        Mobile: <a href="tel:+8801403129869">+8801403129869</a>
+      </p>
+      <p>
+        Follow us on
+        <a href="https://www.facebook.com/cultural.society.seu">Facebook</a> |
+        <a href="https://www.instagram.com/southeast_cultural_society">Instagram</a> |
+        <a href="https://www.youtube.com/@southeastculturalsociety6934">YouTube</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= LOGIN ================= -->
+  <section id="admin-area">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Login</h2>
+      </div>
+
+      <div id="adminLoginBox" class="membership-card admin-login-card">
+        <h3>Login</h3>
+        <p class="login-hint">Executive Committee and approved members log in with the same form below. Members: use your Student ID and the password you set when applying.</p>
+        <form id="adminLoginForm" class="scs-form">
+          <input type="text" name="username" placeholder="Username / Student ID" required>
+          <input type="password" name="password" placeholder="Password" required>
+          <button type="submit">Log In</button>
+        </form>
+        <p id="adminLoginMsg" class="form-msg"></p>
+      </div>
+
+      <div id="adminDashboard" class="admin-dashboard" style="display:none;">
+        <div class="admin-dashboard-header">
+          <p>Logged in as <strong id="adminNameLabel"></strong></p>
+          <button id="adminLogoutBtn" class="logout-btn" style="display:inline-block;">Log Out</button>
+        </div>
+
+        <div class="admin-tabs">
+          <button class="admin-tab-btn active" data-tab="tab-notices">Notices</button>
+          <button class="admin-tab-btn" data-tab="tab-membership">Membership</button>
+          <button class="admin-tab-btn" data-tab="tab-committee">Committee</button>
+          <button class="admin-tab-btn" data-tab="tab-gallery">Gallery</button>
+          <button class="admin-tab-btn" data-tab="tab-articles">Articles</button>
+        </div>
+
+        <div id="tab-notices" class="admin-tab-panel active">
+          <h3>Add Notice / Event</h3>
+          <form id="addNoticeForm" class="scs-form scs-form-inline">
+            <input type="text" name="headline" placeholder="Notice Headline" required>
+            <input type="text" name="details" placeholder="Notice Details">
+            <input type="url" name="registrationLink" placeholder="Registration Link (Optional)">
+            <button type="submit">Publish Notice</button>
+          </form>
+          <h3>Active Notices</h3>
+          <div id="adminNoticesList" class="admin-list"></div>
+        </div>
+
+        <div id="tab-membership" class="admin-tab-panel">
+          <h3>Pending Membership Requests</h3>
+          <div id="adminMembershipList" class="admin-list"></div>
+
+          <h3 style="margin-top: 28px;">Approved Members</h3>
+          <div id="adminApprovedMembersList" class="admin-list"></div>
+        </div>
+
+        <div id="tab-committee" class="admin-tab-panel">
+          <h3>Add Committee Member</h3>
+          <form id="addCommitteeForm" class="scs-form scs-form-inline">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="text" name="position" placeholder="Position" required>
+            <input type="email" name="email" placeholder="Email">
+            <input type="url" name="imageUrl" placeholder="Photo URL (optional)">
+            <button type="submit">Add Member</button>
+          </form>
+          <h3>Current Committee</h3>
+          <div id="adminCommitteeList" class="admin-list"></div>
+        </div>
+
+        <div id="tab-gallery" class="admin-tab-panel">
+          <h3>Add Gallery Photo</h3>
+          <form id="addGalleryForm" class="scs-form scs-form-inline">
+            <input type="text" name="eventTitle" placeholder="Event Title (optional)">
+            <input type="url" name="imageUrl" placeholder="Image URL" required>
+            <button type="submit">Add Photo</button>
+          </form>
+          <h3>Current Photos</h3>
+          <div id="adminGalleryList" class="admin-list"></div>
+        </div>
+
+        <div id="tab-articles" class="admin-tab-panel">
+          <h3>Pending Articles</h3>
+          <div id="adminArticlesList" class="admin-list"></div>
+          <h3>All / Published Articles</h3>
+          <div id="adminAllArticlesList" class="admin-list"></div>
+        </div>
+      </div>
+
+      <div id="memberDashboard" class="admin-dashboard" style="display:none;">
+        <div class="admin-dashboard-header">
+          <p id="memberWelcomeText">Welcome!</p>
+          <button id="memberLogoutBtn" class="logout-btn" style="display:inline-block;">Log Out</button>
+        </div>
+
+        <div class="membership-card article-submit-card">
+          <h3>Write &amp; Submit an Article</h3>
+          <p style="text-align:center;color:var(--ink-soft);font-size:0.9rem;">Your name and email are taken from your login — no need to re-enter them. Submitted articles are reviewed by the committee before publishing.</p>
+          <form id="memberArticleForm" class="scs-form">
+            <input type="text" name="title" placeholder="Article Title" required>
+            <textarea name="content" placeholder="Write your article here..." rows="6" required></textarea>
+            <button type="submit">Submit Article</button>
+          </form>
+          <p id="memberArticleFormMsg" class="form-msg"></p>
+        </div>
+
+        <h3 style="margin-top: 28px;">Your Submitted Articles</h3>
+        <div id="myArticlesList" class="admin-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2010–2026 Southeast Cultural Society. All Rights Reserved.</p>
+  </footer>
+
+  <!-- ================= MODALS ================= -->
+  <div class="modal" id="galleryModal">
+    <div class="modal-content">
+      <h3>Full Gallery</h3>
+      <div class="modal-grid" id="modalGalleryGrid"></div>
+      <button class="close-modal" id="closeGallery">Close</button>
+    </div>
+  </div>
+
+  <div class="modal" id="editArticleModal">
+    <div class="modal-content" style="max-width: 600px; height: auto;">
+      <h3>Edit Article</h3>
+      <form id="editArticleForm" class="scs-form" style="width: 100%; max-width: 100%;">
+        <input type="hidden" id="editArticleId">
+        <input type="text" id="editArticleTitle" placeholder="Article Title" required>
+        <textarea id="editArticleContent" placeholder="Write your article here..." rows="8" required></textarea>
+        <button type="submit">Update Article</button>
+      </form>
+      <button class="close-modal" id="closeEditArticle" style="margin-top: 15px;">Cancel</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
