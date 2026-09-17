@@ -1,4 +1,4 @@
-const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbxXxdPt-IC4oy2jOU8bwObHmMqV8VppSI-Z8y0ajcNNcnp3Huv9D1QaGbRTVelN7jcEug/exec';
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbzyuWCn81j-f9RL6t3erQMTOnQ3BJgtOnvFNl5bqBp4wumwVOJbrRBk2c3yrLIeJBCXUQ/exec';
 
 function adminGet(params) {
   const query = new URLSearchParams(params).toString();
@@ -162,12 +162,10 @@ function loadApprovedMembers(){
   const oldRows = listDiv.querySelectorAll('.recruitment-item, .recruitment-list-msg');
   oldRows.forEach(r => r.remove());
 
-  const isAdmin = getAdminToken() && getAuthRole() === 'admin';
   recruitmentHeader.innerHTML = `
     <div>Name</div>
     <div>Student ID</div>
     <div>Department</div>
-    ${isAdmin ? '<div>Actions</div>' : ''}
   `;
 
   const loadingRow = document.createElement('p');
@@ -183,43 +181,7 @@ function loadApprovedMembers(){
       res.data.forEach(stu => {
         const div = document.createElement('div');
         div.className = 'recruitment-item';
-
-        if (isAdmin) {
-          div.innerHTML = `
-            <div>${stu.Name}</div>
-            <div>${stu.StudentID}</div>
-            <div>${stu.Department}</div>
-            <div class="admin-list-actions">
-              <button class="admin-btn pending">Pending</button>
-              <button class="admin-btn reject">Delete</button>
-            </div>
-          `;
-
-          div.querySelector('.pending').addEventListener('click', () => {
-            adminPost({ action: 'pendingMembership', token: getAdminToken(), id: stu.ID }).then(r => {
-              if (r.success) {
-                loadApprovedMembers();
-              } else {
-                alert(r.error || 'Failed to update status.');
-              }
-            });
-          });
-
-          div.querySelector('.reject').addEventListener('click', () => {
-            if (confirm(`Are you sure you want to delete member ${stu.Name}?`)) {
-              adminPost({ action: 'deleteMembership', token: getAdminToken(), id: stu.ID }).then(r => {
-                if (r.success) {
-                  loadApprovedMembers();
-                } else {
-                  alert(r.error || 'Failed to delete member.');
-                }
-              });
-            }
-          });
-        } else {
-          div.innerHTML = `<div>${stu.Name}</div><div>${stu.StudentID}</div><div>${stu.Department}</div>`;
-        }
-
+        div.innerHTML = `<div>${stu.Name}</div><div>${stu.StudentID}</div><div>${stu.Department}</div>`;
         listDiv.appendChild(div);
       });
       closeRecruitBtn.style.display = 'inline-block';
@@ -376,6 +338,7 @@ function showDashboard(name){
   adminNameLabel.textContent = name || 'Admin';
   refreshAdminNotices();
   refreshAdminMembership();
+  refreshAdminApprovedMembers();
   refreshAdminCommittee();
   refreshAdminGallery();
   refreshAdminArticles();
@@ -629,10 +592,62 @@ function refreshAdminMembership(){
         </div>
       `;
       row.querySelector('.approve').addEventListener('click', () => {
-        adminPost({ action: 'approveMembership', token: getAdminToken(), id: m.ID }).then(refreshAdminMembership);
+        adminPost({ action: 'approveMembership', token: getAdminToken(), id: m.ID }).then(() => {
+          refreshAdminMembership();
+          refreshAdminApprovedMembers();
+        });
       });
       row.querySelector('.reject').addEventListener('click', () => {
-        adminPost({ action: 'rejectMembership', token: getAdminToken(), id: m.ID }).then(refreshAdminMembership);
+        adminPost({ action: 'rejectMembership', token: getAdminToken(), id: m.ID }).then(() => {
+          refreshAdminMembership();
+          refreshAdminApprovedMembers();
+        });
+      });
+      container.appendChild(row);
+    });
+  });
+}
+
+// ADMIN: APPROVED MEMBERS
+function refreshAdminApprovedMembers(){
+  const container = document.getElementById('adminApprovedMembersList');
+  container.innerHTML = '<p class="empty-msg">Loading...</p>';
+  adminGet({ action: 'getApprovedMembers' }).then(res => {
+    container.innerHTML = '';
+    if(!res.success || !res.data.length){ container.innerHTML = '<p class="empty-msg">No approved members yet.</p>'; return; }
+    res.data.forEach(stu => {
+      const row = document.createElement('div');
+      row.className = 'admin-list-item';
+      row.innerHTML = `
+        <div class="item-info">
+          <strong>${stu.Name}</strong>
+          <span>${stu.Department} · ID: ${stu.StudentID}</span>
+        </div>
+        <div class="admin-list-actions">
+          <button class="admin-btn pending">Pending</button>
+          <button class="admin-btn reject">Delete</button>
+        </div>
+      `;
+      row.querySelector('.pending').addEventListener('click', () => {
+        adminPost({ action: 'pendingMembership', token: getAdminToken(), id: stu.ID }).then(r => {
+          if (r.success) {
+            refreshAdminApprovedMembers();
+            refreshAdminMembership();
+          } else {
+            alert(r.error || 'Failed to update status.');
+          }
+        });
+      });
+      row.querySelector('.reject').addEventListener('click', () => {
+        if (confirm(`Are you sure you want to delete member ${stu.Name}?`)) {
+          adminPost({ action: 'deleteMembership', token: getAdminToken(), id: stu.ID }).then(r => {
+            if (r.success) {
+              refreshAdminApprovedMembers();
+            } else {
+              alert(r.error || 'Failed to delete member.');
+            }
+          });
+        }
       });
       container.appendChild(row);
     });
