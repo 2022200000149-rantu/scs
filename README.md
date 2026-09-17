@@ -5,8 +5,8 @@
 
 > An interactive, serverless web platform designed to streamline cultural society operations, event announcements, membership management, creative article publications, and digital identity tracking.
 
-[![Status](https://img.shields.io/badge/Status-Live-success?style=for-the-badge&logo=render)](https://2022200000149-rantu.github.io/SCS/)
-[![Hosting](https://img.shields.io/badge/Hosting-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://2022200000149-rantu.github.io/SCS/)
+[![Status](https://img.shields.io/badge/Status-Live-success?style=for-the-badge&logo=render)](https://2022200000149-rantu.github.io/scs/)
+[![Hosting](https://img.shields.io/badge/Hosting-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://2022200000149-rantu.github.io/scs/)
 [![Backend](https://img.shields.io/badge/Backend-Google%20Apps%20Script-4285F4?style=for-the-badge&logo=google)](https://developers.google.com/apps-script)
 [![Database](https://img.shields.io/badge/Database-Google%20Sheets-34A853?style=for-the-badge&logo=googlesheets)](https://www.google.com/sheets/about/)
 
@@ -44,7 +44,7 @@ Special thanks to **[SDK] Shimul Dey Katha** for continuous technical mentorship
 
 ## 🔗 Live Links
 
-- 🌐 **Official Website:** [Southeast Cultural Society Live](https://2022200000149-rantu.github.io/SCS/)
+- 🌐 **Official Website:** [Southeast Cultural Society Live](https://2022200000149-rantu.github.io/scs/)
 
 ---
 
