@@ -20,9 +20,9 @@ function setup() {
 
   const schemas = {
     Admin: ['Username', 'Password', 'Name'],
-    Membership: ['Membership_ID', 'Name', 'Email', 'Phone', 'Department', 'StudentID', 'ApplicationDate', 'Status', 'DigitalID', 'Password'],
-    Committee: ['Committee_ID', 'Name', 'Position', 'Email', 'ImageURL', 'Task'],
-    Gallery: ['Gallery_ID', 'EventTitle', 'ImageURL', 'UploadDate'],
+    Membership: ['Membership_ID', 'Name', 'Email', 'Phone', 'Department', 'StudentID', 'ApplicationDate', 'Status', 'DigitalID', 'Password', 'Admin_username'],
+    Committee: ['Committee_ID', 'Name', 'Position', 'Email', 'ImageURL', 'Task', 'Admin_username'],
+    Gallery: ['Gallery_ID', 'EventTitle', 'ImageURL', 'UploadDate', 'Admin_username'],
     Articles: ['Article_ID', 'Title', 'Content', 'AuthorName', 'AuthorEmail', 'SubmissionDate', 'Status', 'Membership_ID', 'Admin_username'],
     Notices: ['Notice_ID', 'Headline', 'Details', 'RegistrationLink', 'Date', 'Admin_username']
   };
@@ -30,9 +30,19 @@ function setup() {
   Object.keys(schemas).forEach(name => {
     let sheet = ss.getSheetByName(name);
     if (!sheet) sheet = ss.insertSheet(name);
+    
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(schemas[name]);
       sheet.setFrozenRows(1);
+    } else {
+      const existingHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
+      const normalizedExisting = existingHeaders.map(h => String(h).trim().toLowerCase());
+      
+      schemas[name].forEach(h => {
+        if (!normalizedExisting.includes(h.toLowerCase())) {
+          sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+        }
+      });
     }
   });
 
@@ -44,7 +54,11 @@ function setup() {
   const sheet1 = ss.getSheetByName('Sheet1');
   if (sheet1 && sheet1.getLastRow() === 0) ss.deleteSheet(sheet1);
 
-  SpreadsheetApp.getUi().alert('Setup complete! Default login: admin / admin123');
+  try {
+    SpreadsheetApp.getUi().alert('Setup complete! Default login: admin / admin123');
+  } catch (e) {
+    Logger.log('Setup complete! Default login: admin / admin123');
+  }
 }
 
 function doGet(e) {
@@ -113,16 +127,16 @@ function doPost(e) {
         result = submitMembership(body);
         break;
       case 'approveMembership':
-        requireAuth(body.token, 'admin');
-        result = setMembershipStatus(body.id, 'Approved');
+        const appAdmin = requireAuth(body.token, 'admin');
+        result = setMembershipStatus(body.id, 'Approved', appAdmin.username);
         break;
       case 'pendingMembership':
-        requireAuth(body.token, 'admin');
-        result = setMembershipStatus(body.id, 'Pending');
+        const pendAdmin = requireAuth(body.token, 'admin');
+        result = setMembershipStatus(body.id, 'Pending', pendAdmin.username);
         break;
       case 'rejectMembership':
-        requireAuth(body.token, 'admin');
-        result = setMembershipStatus(body.id, 'Rejected');
+        const rejAdmin = requireAuth(body.token, 'admin');
+        result = setMembershipStatus(body.id, 'Rejected', rejAdmin.username);
         break;
       case 'deleteMembership':
         requireAuth(body.token, 'admin');
@@ -130,8 +144,8 @@ function doPost(e) {
         break;
 
       case 'addCommittee':
-        requireAuth(body.token, 'admin');
-        result = addCommittee(body);
+        const commAdmin = requireAuth(body.token, 'admin');
+        result = addCommittee(body, commAdmin.username);
         break;
       case 'removeCommittee':
         requireAuth(body.token, 'admin');
@@ -143,8 +157,8 @@ function doPost(e) {
         break;
 
       case 'addGalleryImage':
-        requireAuth(body.token, 'admin');
-        result = addGalleryImage(body);
+        const galAdmin = requireAuth(body.token, 'admin');
+        result = addGalleryImage(body, galAdmin.username);
         break;
       case 'removeGalleryImage':
         requireAuth(body.token, 'admin');
@@ -257,25 +271,61 @@ function getNotices() {
 function addNotice(body, adminUsername) {
   const sheet = sheetByName(SHEET_NAMES.NOTICES);
   const id = 'N' + new Date().getTime();
-  sheet.appendRow([
-    id, 
-    body.headline, 
-    body.details || '', 
-    body.registrationLink || '', 
-    new Date().toISOString(),
-    adminUsername || ''
-  ]);
+  
+  const record = {
+    'Notice_ID': id,
+    'Headline': body.headline || '',
+    'Details': body.details || '',
+    'RegistrationLink': body.registrationLink || '',
+    'Date': new Date().toISOString(),
+    'Admin_username': adminUsername || ''
+  };
+
+  appendRowByHeader(sheet, record);
   return { id: id };
 }
 
 // MEMBERSHIP & RECRUITMENT
 function submitMembership(body) {
   const sheet = sheetByName(SHEET_NAMES.MEMBERSHIP);
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  
+  const norm = v => String(v == null ? '' : v).trim().toLowerCase();
+  const targetStudentId = norm(body.studentId);
+
+  if (!targetStudentId) {
+    throw new Error('Student ID is required.');
+  }
+
+  for (let i = 1; i < rows.length; i++) {
+    const rec = rowToObject(headers, rows[i]);
+    if (norm(rec.StudentID) === targetStudentId) {
+      if (rec.Status === 'Pending') {
+        throw new Error('A membership request for this Student ID is already pending approval.');
+      }
+      if (rec.Status === 'Approved') {
+        throw new Error('This Student ID belongs to an already approved member.');
+      }
+    }
+  }
+
   const id = 'M' + new Date().getTime();
-  sheet.appendRow([
-    id, body.name, body.email, body.phone, body.department,
-    body.studentId, new Date().toISOString(), 'Pending', '', body.password || ''
-  ]);
+  const record = {
+    'Membership_ID': id,
+    'Name': body.name || '',
+    'Email': body.email || '',
+    'Phone': body.phone || '',
+    'Department': body.department || '',
+    'StudentID': body.studentId || '',
+    'ApplicationDate': new Date().toISOString(),
+    'Status': 'Pending',
+    'DigitalID': '',
+    'Password': body.password || '',
+    'Admin_username': ''
+  };
+
+  appendRowByHeader(sheet, record);
   return { id: id };
 }
 
@@ -313,15 +363,21 @@ function getApprovedMembers(deptFilter) {
   return out;
 }
 
-function setMembershipStatus(id, status) {
+function setMembershipStatus(id, status, adminUsername) {
   const sheet = sheetByName(SHEET_NAMES.MEMBERSHIP);
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === id) {
-      sheet.getRange(i + 1, 8).setValue(status);
+      const rowIndex = i + 1;
+      updateCellByHeader(sheet, rowIndex, 'Status', status);
+      
+      if (adminUsername) {
+        updateCellByHeader(sheet, rowIndex, 'Admin_username', adminUsername);
+      }
+      
       if (status === 'Approved') {
-        const digitalId = generateDigitalId(i + 1);
-        sheet.getRange(i + 1, 9).setValue(digitalId);
+        const digitalId = generateDigitalId(rowIndex);
+        updateCellByHeader(sheet, rowIndex, 'DigitalID', digitalId);
         return { status: status, digitalId: digitalId };
       }
       return { status: status };
@@ -361,10 +417,21 @@ function getCommittee() {
   return out;
 }
 
-function addCommittee(body) {
+function addCommittee(body, adminUsername) {
   const sheet = sheetByName(SHEET_NAMES.COMMITTEE);
   const id = 'C' + new Date().getTime();
-  sheet.appendRow([id, body.name, body.position, body.email, body.imageUrl || '', '']);
+  
+  const record = {
+    'Committee_ID': id,
+    'Name': body.name || '',
+    'Position': body.position || '',
+    'Email': body.email || '',
+    'ImageURL': body.imageUrl || '',
+    'Task': body.task || '',
+    'Admin_username': adminUsername || ''
+  };
+
+  appendRowByHeader(sheet, record);
   return { id: id };
 }
 
@@ -373,7 +440,7 @@ function assignTask(id, task) {
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === id) {
-      sheet.getRange(i + 1, 6).setValue(task);
+      updateCellByHeader(sheet, i + 1, 'Task', task);
       return { updated: true };
     }
   }
@@ -390,10 +457,19 @@ function getGallery() {
   return out;
 }
 
-function addGalleryImage(body) {
+function addGalleryImage(body, adminUsername) {
   const sheet = sheetByName(SHEET_NAMES.GALLERY);
   const id = 'G' + new Date().getTime();
-  sheet.appendRow([id, body.eventTitle || '', body.imageUrl, new Date().toISOString()]);
+  
+  const record = {
+    'Gallery_ID': id,
+    'EventTitle': body.eventTitle || '',
+    'ImageURL': body.imageUrl || '',
+    'UploadDate': new Date().toISOString(),
+    'Admin_username': adminUsername || ''
+  };
+
+  appendRowByHeader(sheet, record);
   return { id: id };
 }
 
@@ -402,17 +478,20 @@ function submitArticle(body) {
   const identity = requireAuth(body.token);
   const sheet = sheetByName(SHEET_NAMES.ARTICLES);
   const id = 'A' + new Date().getTime();
-  sheet.appendRow([
-    id, 
-    body.title, 
-    body.content, 
-    identity.name, 
-    identity.email || '', 
-    new Date().toISOString(), 
-    'Pending', 
-    identity.membershipId || '',
-    '' // Admin_username starts empty
-  ]);
+  
+  const record = {
+    'Article_ID': id,
+    'Title': body.title || '',
+    'Content': body.content || '',
+    'AuthorName': identity.name || '',
+    'AuthorEmail': identity.email || '',
+    'SubmissionDate': new Date().toISOString(),
+    'Status': 'Pending',
+    'Membership_ID': identity.membershipId || '',
+    'Admin_username': ''
+  };
+
+  appendRowByHeader(sheet, record);
   return { id: id };
 }
 
@@ -450,9 +529,10 @@ function setArticleStatus(id, status, adminUsername) {
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === id) {
-      sheet.getRange(i + 1, 7).setValue(status);
+      const rowIndex = i + 1;
+      updateCellByHeader(sheet, rowIndex, 'Status', status);
       if (adminUsername) {
-        sheet.getRange(i + 1, 9).setValue(adminUsername); // Column 9 = Admin_username
+        updateCellByHeader(sheet, rowIndex, 'Admin_username', adminUsername);
       }
       return { status: status, approvedBy: adminUsername || '' };
     }
@@ -492,11 +572,12 @@ function updateArticle(token, id, title, content) {
       const rec = rowToObject(headers, rows[i]);
       const isOwner = (identity.membershipId && rec.Membership_ID === identity.membershipId) || (identity.email && rec.AuthorEmail === identity.email);
       if (identity.role === 'admin' || (identity.role === 'member' && isOwner)) {
-        sheet.getRange(i + 1, 2).setValue(title);
-        sheet.getRange(i + 1, 3).setValue(content);
+        const rowIndex = i + 1;
+        updateCellByHeader(sheet, rowIndex, 'Title', title);
+        updateCellByHeader(sheet, rowIndex, 'Content', content);
         if (identity.role === 'member') {
-          sheet.getRange(i + 1, 7).setValue('Pending');
-          sheet.getRange(i + 1, 9).setValue(''); // Reset Admin_username when member updates
+          updateCellByHeader(sheet, rowIndex, 'Status', 'Pending');
+          updateCellByHeader(sheet, rowIndex, 'Admin_username', '');
         }
         return { updated: true };
       } else {
@@ -508,6 +589,40 @@ function updateArticle(token, id, title, content) {
 }
 
 // HELPERS
+function getHeaderIndexMap(sheet) {
+  const headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
+  const map = {};
+  headers.forEach((h, i) => {
+    if (h) {
+      map[String(h).trim().toLowerCase()] = i + 1;
+    }
+  });
+  return map;
+}
+
+function appendRowByHeader(sheet, record) {
+  const headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
+  const normalizedRecord = {};
+  Object.keys(record).forEach(k => {
+    normalizedRecord[k.trim().toLowerCase()] = record[k];
+  });
+  const rowData = headers.map(h => {
+    const key = String(h).trim().toLowerCase();
+    return normalizedRecord[key] !== undefined ? normalizedRecord[key] : '';
+  });
+  sheet.appendRow(rowData);
+}
+
+function updateCellByHeader(sheet, rowIndex, headerName, value) {
+  const headerMap = getHeaderIndexMap(sheet);
+  const colIndex = headerMap[headerName.trim().toLowerCase()];
+  if (colIndex) {
+    sheet.getRange(rowIndex, colIndex).setValue(value);
+  } else {
+    throw new Error('Header "' + headerName + '" not found in sheet ' + sheet.getName());
+  }
+}
+
 function sheetByName(name) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
   if (!sheet) throw new Error('Sheet "' + name + '" not found. Run setup() first.');
