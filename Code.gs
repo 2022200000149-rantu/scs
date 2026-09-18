@@ -20,11 +20,11 @@ function setup() {
 
   const schemas = {
     Admin: ['Username', 'Password', 'Name'],
-    Membership: ['ID', 'Name', 'Email', 'Phone', 'Department', 'StudentID', 'ApplicationDate', 'Status', 'DigitalID', 'Password'],
-    Committee: ['ID', 'Name', 'Position', 'Email', 'ImageURL', 'Task'],
-    Gallery: ['ID', 'EventTitle', 'ImageURL', 'UploadDate'],
-    Articles: ['ID', 'Title', 'Content', 'AuthorName', 'AuthorEmail', 'SubmissionDate', 'Status'],
-    Notices: ['ID', 'Headline', 'Details', 'RegistrationLink', 'Date']
+    Membership: ['Membership_ID', 'Name', 'Email', 'Phone', 'Department', 'StudentID', 'ApplicationDate', 'Status', 'DigitalID', 'Password'],
+    Committee: ['Committee_ID', 'Name', 'Position', 'Email', 'ImageURL', 'Task'],
+    Gallery: ['Gallery_ID', 'EventTitle', 'ImageURL', 'UploadDate'],
+    Articles: ['Article_ID', 'Title', 'Content', 'AuthorName', 'AuthorEmail', 'SubmissionDate', 'Status', 'Membership_ID', 'Admin_username'],
+    Notices: ['Notice_ID', 'Headline', 'Details', 'RegistrationLink', 'Date', 'Admin_username']
   };
 
   Object.keys(schemas).forEach(name => {
@@ -152,8 +152,8 @@ function doPost(e) {
         break;
 
       case 'addNotice':
-        requireAuth(body.token, 'admin');
-        result = addNotice(body);
+        const noticeAdmin = requireAuth(body.token, 'admin');
+        result = addNotice(body, noticeAdmin.username);
         break;
       case 'removeNotice':
         requireAuth(body.token, 'admin');
@@ -164,12 +164,12 @@ function doPost(e) {
         result = submitArticle(body);
         break;
       case 'approveArticle':
-        requireAuth(body.token, 'admin');
-        result = setArticleStatus(body.id, 'Approved');
+        const approveAdmin = requireAuth(body.token, 'admin');
+        result = setArticleStatus(body.id, 'Approved', approveAdmin.username);
         break;
       case 'rejectArticle':
-        requireAuth(body.token, 'admin');
-        result = setArticleStatus(body.id, 'Rejected');
+        const rejectAdmin = requireAuth(body.token, 'admin');
+        result = setArticleStatus(body.id, 'Rejected', rejectAdmin.username);
         break;
       case 'deleteArticle':
         result = deleteArticle(body.token, body.id);
@@ -214,7 +214,8 @@ function login(username, password) {
         name: rec.Name,
         email: rec.Email,
         studentId: rec.StudentID,
-        digitalId: rec.DigitalID
+        digitalId: rec.DigitalID,
+        membershipId: rec.Membership_ID
       });
     }
   }
@@ -225,7 +226,13 @@ function login(username, password) {
 function issueToken(identity) {
   const token = Utilities.getUuid();
   CacheService.getScriptCache().put('token_' + token, JSON.stringify(identity), TOKEN_TTL_SECONDS);
-  return { token: token, role: identity.role, name: identity.name, digitalId: identity.digitalId || null };
+  return { 
+    token: token, 
+    role: identity.role, 
+    name: identity.name, 
+    digitalId: identity.digitalId || null, 
+    membershipId: identity.membershipId || null 
+  };
 }
 
 function requireAuth(token, requiredRole) {
@@ -247,10 +254,17 @@ function getNotices() {
   return out;
 }
 
-function addNotice(body) {
+function addNotice(body, adminUsername) {
   const sheet = sheetByName(SHEET_NAMES.NOTICES);
   const id = 'N' + new Date().getTime();
-  sheet.appendRow([id, body.headline, body.details || '', body.registrationLink || '', new Date().toISOString()]);
+  sheet.appendRow([
+    id, 
+    body.headline, 
+    body.details || '', 
+    body.registrationLink || '', 
+    new Date().toISOString(),
+    adminUsername || ''
+  ]);
   return { id: id };
 }
 
@@ -287,7 +301,7 @@ function getApprovedMembers(deptFilter) {
     if (rec.Status === 'Approved') {
       if (!deptFilter || rec.Department.toLowerCase() === deptFilter.toLowerCase()) {
         out.push({
-          ID: rec.ID,
+          Membership_ID: rec.Membership_ID,
           Name: rec.Name,
           StudentID: rec.StudentID,
           Department: rec.Department,
@@ -388,7 +402,17 @@ function submitArticle(body) {
   const identity = requireAuth(body.token);
   const sheet = sheetByName(SHEET_NAMES.ARTICLES);
   const id = 'A' + new Date().getTime();
-  sheet.appendRow([id, body.title, body.content, identity.name, identity.email || '', new Date().toISOString(), 'Pending']);
+  sheet.appendRow([
+    id, 
+    body.title, 
+    body.content, 
+    identity.name, 
+    identity.email || '', 
+    new Date().toISOString(), 
+    'Pending', 
+    identity.membershipId || '',
+    '' // Admin_username starts empty
+  ]);
   return { id: id };
 }
 
@@ -400,7 +424,9 @@ function getMyArticles(token) {
   const out = [];
   for (let i = 1; i < rows.length; i++) {
     const rec = rowToObject(headers, rows[i]);
-    if (identity.email && rec.AuthorEmail === identity.email) out.push(rec);
+    if ((identity.membershipId && rec.Membership_ID === identity.membershipId) || (identity.email && rec.AuthorEmail === identity.email)) {
+      out.push(rec);
+    }
   }
   return out;
 }
@@ -419,13 +445,16 @@ function getArticles(approvedOnly, statusFilter) {
   return out;
 }
 
-function setArticleStatus(id, status) {
+function setArticleStatus(id, status, adminUsername) {
   const sheet = sheetByName(SHEET_NAMES.ARTICLES);
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === id) {
       sheet.getRange(i + 1, 7).setValue(status);
-      return { status: status };
+      if (adminUsername) {
+        sheet.getRange(i + 1, 9).setValue(adminUsername); // Column 9 = Admin_username
+      }
+      return { status: status, approvedBy: adminUsername || '' };
     }
   }
   throw new Error('Article not found');
@@ -440,7 +469,8 @@ function deleteArticle(token, id) {
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === id) {
       const rec = rowToObject(headers, rows[i]);
-      if (identity.role === 'admin' || (identity.role === 'member' && identity.email && identity.email === rec.AuthorEmail)) {
+      const isOwner = (identity.membershipId && rec.Membership_ID === identity.membershipId) || (identity.email && rec.AuthorEmail === identity.email);
+      if (identity.role === 'admin' || (identity.role === 'member' && isOwner)) {
         sheet.deleteRow(i + 1);
         return { deleted: true };
       } else {
@@ -460,11 +490,13 @@ function updateArticle(token, id, title, content) {
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === id) {
       const rec = rowToObject(headers, rows[i]);
-      if (identity.role === 'admin' || (identity.role === 'member' && identity.email && identity.email === rec.AuthorEmail)) {
+      const isOwner = (identity.membershipId && rec.Membership_ID === identity.membershipId) || (identity.email && rec.AuthorEmail === identity.email);
+      if (identity.role === 'admin' || (identity.role === 'member' && isOwner)) {
         sheet.getRange(i + 1, 2).setValue(title);
         sheet.getRange(i + 1, 3).setValue(content);
         if (identity.role === 'member') {
           sheet.getRange(i + 1, 7).setValue('Pending');
+          sheet.getRange(i + 1, 9).setValue(''); // Reset Admin_username when member updates
         }
         return { updated: true };
       } else {
