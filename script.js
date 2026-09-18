@@ -1,4 +1,4 @@
-const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbzyuWCn81j-f9RL6t3erQMTOnQ3BJgtOnvFNl5bqBp4wumwVOJbrRBk2c3yrLIeJBCXUQ/exec';
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbx1AZUufIU3prdzifxC_li-81sE4-sroqaeLyeQJk3O_Tl-ncrMuGFAK4Gp1TplwcEWLQ/exec';
 
 function adminGet(params) {
   const query = new URLSearchParams(params).toString();
@@ -497,7 +497,7 @@ function loadMyArticles(){
       `;
 
       row.querySelector('.edit-btn').addEventListener('click', () => {
-        document.getElementById('editArticleId').value = a.ID;
+        document.getElementById('editArticleId').value = a.Article_ID;
         document.getElementById('editArticleTitle').value = a.Title;
         document.getElementById('editArticleContent').value = a.Content;
         editArticleModal.classList.add('active');
@@ -505,7 +505,7 @@ function loadMyArticles(){
 
       row.querySelector('.delete-btn').addEventListener('click', () => {
         if(confirm(`Are you sure you want to delete "${a.Title}"?`)){
-          adminPost({ action: 'deleteArticle', token: getAdminToken(), id: a.ID }).then(res => {
+          adminPost({ action: 'deleteArticle', token: getAdminToken(), id: a.Article_ID }).then(res => {
             if(res.success){
               loadMyArticles();
               loadPublicArticles();
@@ -560,7 +560,7 @@ function refreshAdminNotices(){
         </div>
       `;
       row.querySelector('.remove').addEventListener('click', () => {
-        adminPost({ action: 'removeNotice', token: getAdminToken(), id: n.ID }).then(() => {
+        adminPost({ action: 'removeNotice', token: getAdminToken(), id: n.Notice_ID }).then(() => {
           refreshAdminNotices();
           loadNotices();
         });
@@ -592,13 +592,13 @@ function refreshAdminMembership(){
         </div>
       `;
       row.querySelector('.approve').addEventListener('click', () => {
-        adminPost({ action: 'approveMembership', token: getAdminToken(), id: m.ID }).then(() => {
+        adminPost({ action: 'approveMembership', token: getAdminToken(), id: m.Membership_ID }).then(() => {
           refreshAdminMembership();
           refreshAdminApprovedMembers();
         });
       });
       row.querySelector('.reject').addEventListener('click', () => {
-        adminPost({ action: 'rejectMembership', token: getAdminToken(), id: m.ID }).then(() => {
+        adminPost({ action: 'rejectMembership', token: getAdminToken(), id: m.Membership_ID }).then(() => {
           refreshAdminMembership();
           refreshAdminApprovedMembers();
         });
@@ -629,7 +629,7 @@ function refreshAdminApprovedMembers(){
         </div>
       `;
       row.querySelector('.pending').addEventListener('click', () => {
-        adminPost({ action: 'pendingMembership', token: getAdminToken(), id: stu.ID }).then(r => {
+        adminPost({ action: 'pendingMembership', token: getAdminToken(), id: stu.Membership_ID }).then(r => {
           if (r.success) {
             refreshAdminApprovedMembers();
             refreshAdminMembership();
@@ -640,7 +640,7 @@ function refreshAdminApprovedMembers(){
       });
       row.querySelector('.reject').addEventListener('click', () => {
         if (confirm(`Are you sure you want to delete member ${stu.Name}?`)) {
-          adminPost({ action: 'deleteMembership', token: getAdminToken(), id: stu.ID }).then(r => {
+          adminPost({ action: 'deleteMembership', token: getAdminToken(), id: stu.Membership_ID }).then(r => {
             if (r.success) {
               refreshAdminApprovedMembers();
             } else {
@@ -697,12 +697,12 @@ function refreshAdminCommittee(){
       row.querySelector('.assign').addEventListener('click', () => {
         const task = prompt('Enter task for ' + m.Name + ':', m.Task || '');
         if(task !== null){
-          adminPost({ action: 'assignTask', token: getAdminToken(), id: m.ID, task }).then(refreshAdminCommittee);
+          adminPost({ action: 'assignTask', token: getAdminToken(), id: m.Committee_ID, task }).then(refreshAdminCommittee);
         }
       });
       row.querySelector('.remove').addEventListener('click', () => {
         if(confirm('Remove ' + m.Name + '?')){
-          adminPost({ action: 'removeCommittee', token: getAdminToken(), id: m.ID }).then(() => {
+          adminPost({ action: 'removeCommittee', token: getAdminToken(), id: m.Committee_ID }).then(() => {
             refreshAdminCommittee();
             loadPublicCommittee();
           });
@@ -751,7 +751,7 @@ function refreshAdminGallery(){
         </div>
       `;
       row.querySelector('.remove').addEventListener('click', () => {
-        adminPost({ action: 'removeGalleryImage', token: getAdminToken(), id: g.ID }).then(() => {
+        adminPost({ action: 'removeGalleryImage', token: getAdminToken(), id: g.Gallery_ID }).then(() => {
           refreshAdminGallery();
           loadGallery();
         });
@@ -788,17 +788,17 @@ function refreshAdminArticles(){
         </div>
       `;
       row.querySelector('.approve').addEventListener('click', () => {
-        adminPost({ action: 'approveArticle', token: getAdminToken(), id: a.ID }).then(() => {
+        adminPost({ action: 'approveArticle', token: getAdminToken(), id: a.Article_ID }).then(() => {
           refreshAdminArticles();
           loadPublicArticles();
         });
       });
       row.querySelector('.reject').addEventListener('click', () => {
-        adminPost({ action: 'rejectArticle', token: getAdminToken(), id: a.ID }).then(refreshAdminArticles);
+        adminPost({ action: 'rejectArticle', token: getAdminToken(), id: a.Article_ID }).then(refreshAdminArticles);
       });
       row.querySelector('.remove').addEventListener('click', () => {
         if(confirm(`Delete "${a.Title}"?`)){
-          adminPost({ action: 'deleteArticle', token: getAdminToken(), id: a.ID }).then(() => {
+          adminPost({ action: 'deleteArticle', token: getAdminToken(), id: a.Article_ID }).then(() => {
             refreshAdminArticles();
             loadPublicArticles();
           });
@@ -826,7 +826,7 @@ function refreshAdminArticles(){
       `;
       row.querySelector('.remove').addEventListener('click', () => {
         if(confirm(`Delete article "${a.Title}"?`)){
-          adminPost({ action: 'deleteArticle', token: getAdminToken(), id: a.ID }).then(() => {
+          adminPost({ action: 'deleteArticle', token: getAdminToken(), id: a.Article_ID }).then(() => {
             refreshAdminArticles();
             loadPublicArticles();
           });
