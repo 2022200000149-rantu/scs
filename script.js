@@ -1,4 +1,4 @@
-const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbx1AZUufIU3prdzifxC_li-81sE4-sroqaeLyeQJk3O_Tl-ncrMuGFAK4Gp1TplwcEWLQ/exec';
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbwxDCtVRxR6MgyNcmiCuhGdKnvM1c1_AVVM3A8zls_EyewFvl_NLBBUzVSzZ6dGVQK1BA/exec';
 
 function adminGet(params) {
   const query = new URLSearchParams(params).toString();
